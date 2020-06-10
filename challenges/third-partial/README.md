@@ -1,7 +1,7 @@
-Challenge:  Second Term Partial
-===============================
+Challenge:  Third Term Partial
+==============================
 
-This is the second term challenge-based exam for the Distributed Computing Class. This is the beginning of 3 deliverables of your final challenge.
+This is the third term challenge-based exam for the Distributed Computing Class. This is the beginning of 3 deliverables of your final challenge.
 On this challenge you're developing the first part of your final project that will be a parallel image processing system.
 
 A strong recomendation is that you develop your solution the most simple, readable, scalable and plugable as possible. In the following challenges you will
@@ -12,18 +12,36 @@ Distributed and Parallel Image Processing
 
 ![architecture](architecture.png)
 
-### First Phase for the Final Challage
-This is going to be the first phase of design and implementation.
-You're basically implementing the initial entry point for your Distributed and Parallel Image Processing System. Below the key points you're implementing on this challenge:
+### Second Phase for the Final Challage
+This is going to be the second phase of design and implementation.
+On this phase you are adding 3 new components that will start making more sense as a distributed system
+- Controller
+- Scheduler
+- Worker
 
-- *Initial API endpoints*
-  - `/login` - user/password request, token-based authentication for granted users.
-  - `/logout` - token-based request, token revocation.
-  - `/upload` - simple image upload support, respond with image name, size and upload time.
-  - `/status` - token-based request, Overall system status and logged user details.
-- *Basic Authentication* - token-based authentication
-- *Controller* (simple request validation and and simple response support)
-- Image receiving support
+Your project will be divided on packages with very descriptive names where each system's component will be implemented.
+Below you can see the details of each package and requirements for this partial:
+
+- `api/`
+  - From now, all request must be token-based authenticated
+  - **Endpoint:** `/status` - Overall system status and logged user details. Also, print workers details (name, status and usage percentage)
+  - **Endpoint:** `/status/<worker>` - Per worker details:  (name, tags, status and usage percentage)
+  - **Endpoint:** `workloads/test` - This endpoint will trigger an initial end-to-end test from the `api` to a running `worker`
+
+- `controller/`
+  - Basic overall system and per node data store (it can be in-memory or a key-value datastore)
+  - Request pre-validation before sending to `scheduler`
+  - Controller will create a message-passing server for its interaction with workers
+
+- `scheduler/`
+  - Basic workloads scheduling that will be based on node's tags and # of running workloads
+  - Scheduler is calling workers through RPC
+
+- `worker/`
+  - Standalone component with initial `test` RPC function.
+  - Worker's command line will be as follows:
+    - `./worker --controller <host>:<port> --node-name <node_name> --tags <tag1>,<tag2>...`
+
 
 **Documentation**
 - A detailed arquitecture document will be required for this initial phase in the [architecture.md](architecture.md) file. Diagrams and charts can be included on this document.
@@ -32,44 +50,29 @@ You're basically implementing the initial entry point for your Distributed and P
 
 Test Cases (from console)
 -------------------------
-Below you will see some examples of input and output on how your program will be tested:
+- [Project's First Phase Test Cases](../second-partial/#test-cases-from-console)
 
-- **Login**
+- **Node Status**
 ```
-$ curl -u username:password http://localhost:8080/login
+$ curl -H "Authorization: Bearer <ACCESS_TOKEN>" http://localhost:8080/status/<worker>
 {
-	"message": "Hi username, welcome to the DPIP System",
-	"token" "OjIE89GzFw"
+	"Worker": "Worker-name",
+	"Tags": "tag1,tag2,tag3",
+	"Status": "Running",
+	"Usage": "50%"
 }
 ```
 
-- **Logout**
+- **Execute Workload**
 ```
-$ curl -H "Authorization: Bearer <ACCESS_TOKEN>" http://localhost:8080/logout
+$ curl -H "Authorization: Bearer <ACCESS_TOKEN>" http://localhost:8080/workloads/test
 {
-	"message": "Bye username, your token has been revoked"
+	"Workload": "test",
+	"Job ID": "1",
+	"Status": "Scheduling",
+	"Result: "Done in Worker: <worker_name>"
 }
 ```
-
-- **Upload**
-```
-$ curl -F 'data=@path/to/local/image.png' -H "Authorization: Bearer <ACCESS_TOKEN>" http://localhost:8080/upload
-{
-	"message": "An image has been successfully uploaded",
-	"filename": "image.png",
-	"size": "500kb"
-}
-```
-
-- **Status**
-```
-$ curl -H "Authorization: Bearer <ACCESS_TOKEN>" http://localhost:8080/status
-{
-	"message": "Hi username, the DPIP System is Up and Running"
-	"time": "2015-03-07 11:06:39"
-}
-```
-
 
 "Game" Rules
 ------------
